@@ -9,5 +9,8 @@ public class ColorDef {
     public static final int YELLOW0_H    = 0xFFff9000; //深黄色
     public static final int GREEN0_L     = 0xff00d829; //浅绿色
     public static final int GREEN0_H     = 0xff008e1b; //深绿色
+
+    public static final int HINT_TEXT     = 0xffAEAEAE; //无字符时的提示色
+    public static final int DEFAULT_TEXT  = 0xff333333; //默认字符时深灰色
 }
 
