@@ -39,7 +39,6 @@ public class EventMng{
     private static List<Element> elementAry  = new ArrayList<>();  //事件队列
 
     //--------------------------------以下为公共接口-------------------------------------
-
     //创建, 并从事件输入流中恢复事件队列,读取最大条数
     public EventMng(Context context, int rdMaxCount){
         InputStream in = null;
@@ -77,8 +76,14 @@ public class EventMng{
         newEventPos = -1; //开机无新位置信息
     }
 
+    //得到新事件起始位置ID,负值表示无新事件
+    public int getNewEventPos(){return newEventPos; }
+    //得到事件总数
+    public int getEventCount(){return elementAry.size(); }
+
+
     //更新新事件位置，形参为从前到后已读取新事件总数
-    public void updatenewEventPos(int readedCount){
+    public void updateNewEventPos(int readedCount){
         if(newEventPos < 0) return;
         newEventPos += readedCount;
         if(newEventPos >= elementAry.size())
@@ -129,22 +134,25 @@ public class EventMng{
     //得到事件字符串,返回是否成功
     //flagAry的ID号定义为： “0日期 ,1位置，2事件信息”,日期时，最高8bit表示日期格式
     public boolean getEventString(int eventPos, //指定倒序位置
-                                  int flagAry[],   //以顺序表示：0-7bit: 长度， 17bit以上，项号
+                                  int flagAry[],   //以顺序表示：0-7bit: 长度(0时不指定)， 17bit以上，项号
                                   StringBuilder stringBuilder){
-        int aryPos = elementAry.size() - eventPos;
+        int aryPos = elementAry.size() - eventPos - 1;
         if(aryPos < 0) return false;
         Element element = elementAry.get(aryPos);
         for(int flagPos = 0; flagPos < flagAry.length; flagPos++){
             int flag = flagAry[flagPos];
             int prvPos = stringBuilder.length();
-            switch(flag >> 8) {
-                case 0: //0时间
+            switch((flag >> 8) & 0xff){
+                case 0: //0序号
+                    stringBuilder.append(eventPos + 1);
+                    break;
+                case 1: //1时间
                     ZipTime.toStringCh(stringBuilder, element.zipTime, (flag >> 24) & 0x7f);
                     break;
-                case 1: //1位置
+                case 2: //2位置
                     stringBuilder.append(element.pos);
                     break;
-                case 2: //2事件信息
+                case 3: //3事件信息
                     stringBuilder.append(element.eventInfo);
                     break;
             }
@@ -152,7 +160,10 @@ public class EventMng{
             int len = stringBuilder.length();
             int curLen = len - prvPos;
             int Max = flag & 0xff;
-            if(curLen < Max){//补齐空格
+            if(Max == 0){
+                stringBuilder.append(" ");//空格间隔
+            }
+            else if(curLen < Max){//不够，补齐空格
                 for(; curLen < Max; curLen++) stringBuilder.append(" ");
             }
             else if(curLen > Max){//强制截断

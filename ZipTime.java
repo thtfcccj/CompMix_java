@@ -63,46 +63,46 @@ public class ZipTime{
         if((Flag & 0x03) != 0) {//有年份定义时
             data = yearR2A(ZipTime >> YEAR_SHIFT);
             if ((Flag & 0x01) != 0) {
-                stringBuilder.append((data / 1000) + '0');
+                stringBuilder.append((char)((data / 1000) + '0'));
                 data %= 1000;
-                stringBuilder.append((data / 100) + '0');
+                stringBuilder.append((char)((data / 100) + '0'));
                 Flag |= 0x02;//强制
             }
             data %= 100;
             if ((Flag & 0x02) != 0) {
-                stringBuilder.append((data / 10) + '0');
-                stringBuilder.append((data % 10) + '0');
+                stringBuilder.append((char)((data / 10) + '0'));
+                stringBuilder.append((char)((data % 10) + '0'));
                 stringBuilder.append('-');
             }
         }
         if((Flag & 0x04) != 0){//月
             data = (ZipTime & MOUTH_MASK) >> MOUTH_SHIFT;
-            stringBuilder.append((data / 10) + '0');
-            stringBuilder.append((data % 10) + '0');
+            stringBuilder.append((char)((data / 10) + '0'));
+            stringBuilder.append((char)((data % 10) + '0'));
             stringBuilder.append('-');
         }
         if((Flag & 0x08) != 0){//日
             data = (ZipTime & DATE_MASK) >> DATE_SHIFT;
-            stringBuilder.append((data / 10) + '0');
-            stringBuilder.append((data % 10) + '0');
+            stringBuilder.append((char)((data / 10) + '0'));
+            stringBuilder.append((char)((data % 10) + '0'));
             stringBuilder.append(' ');
         }
         if((Flag & 0x10) != 0){//时
             data = (ZipTime & HOUR_MASK) >> HOUR_SHIFT;
-            stringBuilder.append((data / 10) + '0');
-            stringBuilder.append((data % 10) + '0');
+            stringBuilder.append((char)((data / 10) + '0'));
+            stringBuilder.append((char)((data % 10) + '0'));
             stringBuilder.append(':');
         }
         if((Flag & 0x20) != 0){//分
             data = (ZipTime & MIN_MASK) >> MOUTH_SHIFT;
-            stringBuilder.append((data / 10) + '0');
-            stringBuilder.append((data % 10) + '0');
+            stringBuilder.append((char)((data / 10) + '0'));
+            stringBuilder.append((char)((data % 10) + '0'));
             stringBuilder.append(':');
         }
         if((Flag & 0x40) != 0){//秒
             data = (ZipTime & SEC_MASK);
-            stringBuilder.append((data / 10) + '0');
-            stringBuilder.append((data % 10) + '0');
+            stringBuilder.append((char)((data / 10) + '0'));
+            stringBuilder.append((char)((data % 10) + '0'));
         }
         if((Flag & 0x80) != 0) {//结束字符
             stringBuilder.append('\0');
