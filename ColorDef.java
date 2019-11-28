@@ -12,5 +12,7 @@ public class ColorDef {
 
     public static final int HINT_TEXT     = 0xffAEAEAE; //无字符时的提示色
     public static final int DEFAULT_TEXT  = 0xff333333; //默认字符时深灰色
+    public static final int ACCENT_TEXT   = 0xffD81B60; //字符时选中，口红色
+    public static final int BLACK_TEXT    =  0xff000000; //字符可点击时，黑色
 }
 

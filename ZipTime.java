@@ -48,8 +48,8 @@ public class ZipTime{
         int zipTime = date.getSeconds() << SEC_SHIFT;
         zipTime |= date.getMinutes() << MIN_SHIFT;
         zipTime |= date.getHours() << HOUR_SHIFT;
-        zipTime |= date.getDay() << DATE_SHIFT;
-        zipTime |= date.getMonth() << MOUTH_SHIFT;
+        zipTime |= date.getDate() << DATE_SHIFT;
+        zipTime |= (date.getMonth() + 1) << MOUTH_SHIFT;
         zipTime |= yearA2R(date.getYear()) << YEAR_SHIFT;
         return zipTime;
     }
@@ -94,7 +94,7 @@ public class ZipTime{
             stringBuilder.append(':');
         }
         if((Flag & 0x20) != 0){//分
-            data = (ZipTime & MIN_MASK) >> MOUTH_SHIFT;
+            data = (ZipTime & MIN_MASK) >> MIN_SHIFT;
             stringBuilder.append((char)((data / 10) + '0'));
             stringBuilder.append((char)((data % 10) + '0'));
             stringBuilder.append(':');

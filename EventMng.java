@@ -4,6 +4,8 @@ package com.cofdet.dap8600.CompMix_java;
 
 import android.content.Context;
 
+import com.cofdet.dap8600.utils.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,8 +32,7 @@ public class EventMng{
 
         @Override
         public String toString() { //去掉标识识符，直接用","号以节省空间
-            return id + "," + eventType + "," + zipTime + "," + pos + '\'' +
-                    ",'" + eventInfo + '\'';
+            return id + "," + eventType + "," + zipTime + "," + pos  +  "," + eventInfo + '\n';
         }
     }
     private static final int ELEMENT_LEN = 5; //元素个数
@@ -81,10 +82,11 @@ public class EventMng{
     //得到事件总数
     public int getEventCount(){return elementAry.size(); }
 
-
-    //更新新事件位置，形参为从前到后已读取新事件总数
+    //更新新事件位置，形参为从前到后已读取新事件总数,0表示所有
     public void updateNewEventPos(int readedCount){
         if(newEventPos < 0) return;
+        if(readedCount <= 0)
+            newEventPos = -1; //全部读取完成了，无新位置可重新统计
         newEventPos += readedCount;
         if(newEventPos >= elementAry.size())
             newEventPos = -1; //全部读取完成了，无新位置可重新统计
@@ -114,6 +116,7 @@ public class EventMng{
             int aryPos = elementAry.size() - rdyWrInc;
             for(; rdyWrInc > 0; rdyWrInc--, aryPos++) {
                 stringBuilder.append(elementAry.get(aryPos).toString());
+                stringBuilder.append("\n"); //换行符
             }
             writer.write(stringBuilder.toString());
         } catch (FileNotFoundException e) {
@@ -131,23 +134,34 @@ public class EventMng{
         }
     }
 
-    //得到事件字符串,返回是否成功
-    //flagAry的ID号定义为： “0日期 ,1位置，2事件信息”,日期时，最高8bit表示日期格式
+    //得到事件字符串(无换行符),返回是否成功
+    //flagAry的ID号定义为：
+    // 0-7bit: 填充长度，0表示自动长度
+    // 8-15bit: 0序号，1日期 ,2位置，3事件信息，其它填充空格
+    // 9bit: 右对齐，否则左对齐
+    // 其它：日期时，最高8bit表示日期格式; 序号时,最高8bit表示填充位数，0表示自动长度
     public boolean getEventString(int eventPos, //指定倒序位置
+                                  int offPos,   //偏移位置
                                   int flagAry[],   //以顺序表示：0-7bit: 长度(0时不指定)， 17bit以上，项号
                                   StringBuilder stringBuilder){
-        int aryPos = elementAry.size() - eventPos - 1;
+        int aryPos = elementAry.size() - (eventPos + offPos) - 1;
         if(aryPos < 0) return false;
         Element element = elementAry.get(aryPos);
         for(int flagPos = 0; flagPos < flagAry.length; flagPos++){
             int flag = flagAry[flagPos];
             int prvPos = stringBuilder.length();
+            int privateInfo = (flag >> 24) & 0x7f;
             switch((flag >> 8) & 0xff){
                 case 0: //0序号
                     stringBuilder.append(eventPos + 1);
+                    if(privateInfo != 0) {//固定长度,不足前面填充0
+                        int fullZero = privateInfo - StringUtils.getChEnLen(stringBuilder,prvPos);
+                        for(; fullZero > 0; fullZero--)
+                            stringBuilder.insert(prvPos, "0");
+                    }
                     break;
                 case 1: //1时间
-                    ZipTime.toStringCh(stringBuilder, element.zipTime, (flag >> 24) & 0x7f);
+                    ZipTime.toStringCh(stringBuilder, element.zipTime, privateInfo);
                     break;
                 case 2: //2位置
                     stringBuilder.append(element.pos);
@@ -156,20 +170,20 @@ public class EventMng{
                     stringBuilder.append(element.eventInfo);
                     break;
             }
-            //对齐处理:
-            int len = stringBuilder.length();
-            int curLen = len - prvPos;
+            //对齐处理(注：经测试，很难用此方法保证对齐，因为半角占位不是半个):
+            int curLen = StringUtils.getChEnLen(stringBuilder,prvPos);
             int Max = flag & 0xff;
-            if(Max == 0){
-                stringBuilder.append(" ");//空格间隔
-            }
+            if(Max == 0){}//自动长度
             else if(curLen < Max){//不够，补齐空格
-                for(; curLen < Max; curLen++) stringBuilder.append(" ");
+                for(; curLen < Max; curLen++){
+                    if((flag & 0x800) == 0) stringBuilder.append(" ");//左对齐
+                    else stringBuilder.insert(prvPos, " ");//右对齐
+                }
             }
             else if(curLen > Max){//强制截断
-                stringBuilder.delete(len - (curLen - Max), len - 1);
-                stringBuilder.append(" ");//空格间隔
+                stringBuilder.delete(prvPos, prvPos + curLen);//中英文问题可能对不齐!!!!
             }
+            stringBuilder.append(" ");//空格间隔
         }//end for
         return true;
     }
