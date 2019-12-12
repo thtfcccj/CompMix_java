@@ -27,4 +27,12 @@ public class AryUtils{
         }
         return l + 1;
     }
-};
+
+    //由阵列顺序查找索引号，小下标时使用，返回负未找到
+    public static int indexOf(int[] ary, int volume){
+        for(int i = 0; i < ary.length; i++){
+            if(ary[i] == volume) return i;
+        }
+        return -1;
+    }
+}
